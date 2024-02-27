@@ -1,11 +1,12 @@
 from django.db import models
 
+currency_choices = {
+    "usd": "usd",
+    "rur": "rur"
+}
+
 
 class Item(models.Model):
-    currency_choices = {
-        "usd": "usd",
-        "rur": "rur"
-    }
 
     name = models.CharField(max_length=255)
     description = models.TextField()
@@ -17,17 +18,28 @@ class Item(models.Model):
 
 
 class Order(models.Model):
-    discount = models.ForeignKey('Discount',
-                                 null=True, on_delete=models.SET_NULL)
-    tax = models.ForeignKey('Tax', null=True, on_delete=models.PROTECT)
-    items = models.ManyToManyField(Item)
+    amount = models.IntegerField()
+    currency = models.CharField(choices=currency_choices)
+    discount = models.ForeignKey(
+        'Discount', default=None, blank=True,
+        null=True, on_delete=models.PROTECT)
+    tax = models.ForeignKey('Tax', blank=True,
+                            null=True, on_delete=models.PROTECT)
+    items = models.JSONField(blank=True)
+    payment_intent = models.CharField(max_length=255)
+    complete = models.BooleanField(default=False)
+
+    def __str__(self):
+        completeness = "(incomplete)" if not self.complete else "(complete)"
+        return completeness + ' ' + str(self.amount) + self.currency
 
 
 class Discount(models.Model):
     amount = models.IntegerField()
+    code = models.CharField(max_length=255)
 
     def __str__(self):
-        return str(self.amount)
+        return str(self.code)
 
 
 class Tax(models.Model):
@@ -35,3 +47,6 @@ class Tax(models.Model):
 
     def __str__(self):
         return str(self.amount)
+
+    class Meta:
+        verbose_name_plural = "Taxes"
