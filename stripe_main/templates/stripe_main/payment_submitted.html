@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8" />
+    <title>Payment submitted</title>
+    <meta name="description" content="A demo of a payment on Stripe" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://js.stripe.com/v3/"></script>
+  </head>
+  
+  <body>
+    <div id="order_details" style="margin-top: 100px" class="form_copy">
+      <div style="text-align: center; margin: 10px 0">
+        status of the payment:
+      </div>
+      <div style="margin: 30px 0" id="payment-message" class="hidden"></div>
+      <div style="margin: 10px 0">
+        if it shows "Your payment is processing", reload this page to see if it finished.
+      </div>
+      <div id="text_continue_buying" class="hidden" style="color:red"> you have items of different currency left unbought</div>
+      <button id="button_continue_buying" class="hidden"> continue buying what's left </button>
+      <button id="button_redirect"> redirect me to where I started </button>
+    </div>
+  </body>
+  <script>
+   const redirect_url_start = '/items/'
+   const redirect_url_continue = '/checkout/'
+   const stripe =
+     Stripe("{{ stripe_secret_api_key }}");
+   checkStatus()
+   async function checkStatus() {
+     let clientSecret = new URLSearchParams(window.location.search).get(
+       "payment_intent_client_secret"
+     );
+
+     if (!clientSecret) {
+       return;
+     }
+
+     const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
+
+     switch (paymentIntent.status) {
+       case "succeeded":
+	 showMessage("Payment succeeded!");
+	 break;
+       case "processing":
+	 showMessage("Your payment is processing.");
+	 break;
+       case "requires_payment_method":
+	 showMessage("Your payment was not successful, please try again.");
+	 break;
+       default:
+	 showMessage("Something went wrong.");
+	 break;
+     }
+   }
+
+   // ------- UI helpers -------
+
+   function showMessage(messageText) {
+     const messageContainer = document.querySelector("#payment-message");
+
+     messageContainer.classList.remove("hidden");
+     messageContainer.textContent = messageText;
+
+   }
+   // ------- UI helpers end here ------
+
+   const button_redirect = document.getElementById("button_redirect")
+   const button_continue_buying = document.getElementById("button_continue_buying")
+   text_continue_buying = document.getElementById("text_continue_buying")
+   button_redirect.addEventListener('click', function () {
+     window.location.replace(redirect_url_start)
+   })
+   button_continue_buying.addEventListener('click', function () {
+     const data_params = new URLSearchParams({ "data": data });
+     window.location.replace('/checkout/' + '?' + data_params)
+   })
+
+
+   let data = new URLSearchParams(window.location.search).get("data");
+   if (data) {
+     button_continue_buying.classList.remove("hidden");
+     text_continue_buying.classList.remove('hidden')
+   }
+  </script>
+  <style>
+   /* Variables */
+   * {
+     box-sizing: border-box;
+   }
+
+   body {
+     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+     font-size: 16px;
+     -webkit-font-smoothing: antialiased;
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-content: center;
+     width: 100vw;
+   }
+
+
+   .form_copy {
+     width: 30vw;
+     min-width: 500px;
+     align-self: center;
+     box-shadow: 0px 0px 0px 0.5px rgba(50, 50, 93, 0.1),
+     0px 2px 5px 0px rgba(50, 50, 93, 0.1), 0px 1px 1.5px 0px rgba(0, 0, 0, 0.07);
+     border-radius: 7px;
+     padding: 40px;
+     margin-bottom: 20px;
+   }
+
+   .hidden {
+     display: none;
+   }
+
+   #payment-message {
+     color: rgb(105, 115, 134);
+     font-size: 16px;
+     line-height: 20px;
+     padding-top: 12px;
+     text-align: center;
+   }
+
+   #payment-element {
+     margin-bottom: 24px;
+   }
+
+   /* Buttons and links */
+   button {
+     background: #5469d4;
+     font-family: Arial, sans-serif;
+     color: #ffffff;
+     border-radius: 4px;
+     border: 0;
+     padding: 12px 16px;
+     font-size: 16px;
+     font-weight: 600;
+     cursor: pointer;
+     display: block;
+     transition: all 0.2s ease;
+     box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
+     width: 100%;
+     margin: 10px 0;
+   }
+
+   button:hover {
+     filter: contrast(115%);
+   }
+
+   button:disabled {
+     opacity: 0.5;
+     cursor: default;
+   }
+
+  </style>
+
+</html>

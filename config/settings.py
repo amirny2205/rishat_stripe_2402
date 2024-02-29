@@ -28,6 +28,10 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+STRIPE_API_KEY = "sk_test_51M5Ej5AOiYw02tQNGQGbO3SGhtmEeEcEb9cVIzcLfOedNl3pJlom5J7BWhnRT2mFqUK0O8L2hQAv4wokmUf7kzqC002m4Jv6OA"
+STRIPE_SECRET_API_KEY = "pk_test_51M5Ej5AOiYw02tQNODQIZcVlMHpQwLf8ThvFGt1vB96eAjXxR6jUzKC7ngioFL3SkTXjnmLhyhrSxk6xd2Sw6kHK00FH2Jo0Ew"
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -55,7 +59,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -76,10 +80,13 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'rishat_db',
+        'USER': 'postgres',
+        'PASSWORD': 'q',
+        'HOST': 'localhost',
+        'PORT': 5432,
+}}
 
 
 # Password validation
