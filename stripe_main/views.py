@@ -7,11 +7,12 @@ from . import models
 import traceback
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_POST
+from django.conf import settings
 
 
-stripe.api_key = "sk_test_51M5Ej5AOiYw02tQNGQGbO3SGhtmEeEcEb9cVIzcLfOedNl3pJlom5J7BWhnRT2mFqUK0O8L2hQAv4wokmUf7kzqC002m4Jv6OA"
+stripe.api_key = settings.STRIPE_API_KEY
 
-minimum_amounts = {'usd': 1, 'rub': 50 }
+minimum_amounts = {'usd': 1, 'rub': 50}
 
 
 @csrf_exempt
@@ -98,8 +99,8 @@ def buy(request):
                  [item_id for item_id in items_now],
                  [items_now[item][1] for item in items_now])},
              payment_intent=intent['id'])
-        # order.taxes.set(taxes)
-        # order.discounts.set(discounts)
+        order.taxes.set(taxes)
+        order.discounts.set(discounts)
 
         order_data = {}
         order_data = {
@@ -112,20 +113,41 @@ def buy(request):
         for tax in taxes:
             order_data['taxes'].append([tax.amount, tax.description])
 
+        remaining_data = []
         if items_remaining:
             remaining_data = data.copy()
             remaining_data.update({'items': {k: v for k, v in zip([item_id for item_id in items_remaining], [items_remaining[item][1] for item in items_remaining])}})
-            return JsonResponse(
-                {'clientSecret': intent['client_secret'],
-                 'remaining_data': json.dumps(remaining_data),
-                 'order_data': json.dumps(order_data)})
         return JsonResponse(
             {'clientSecret': intent['client_secret'],
+             'remaining_data': json.dumps(remaining_data),
              'order_data': json.dumps(order_data)})
 
     except Exception as e:
         print(traceback.format_exc())
         return JsonResponse({"error": str(e)}, status=400)
+
+
+@csrf_exempt
+@require_POST
+def check_promocode(request):
+    try:
+        discount = models.Discount.objects.get(code=json.loads(request.body)['promocode'])
+        return HttpResponse(json.dumps({'result': 'promocode found', 'discount': [discount.code, discount.amount, discount.currency]}), content_type="application/json")
+    except ObjectDoesNotExist:
+        return HttpResponse(json.dumps({'result': 'promocode not found'}), content_type="application/json")
+        return HttpResponse('promocode not found')
+    except Exception:
+        print(traceback.format_exc())
+        return HttpResponse(json.dumps({'result': 'internal server error'}), status=500, content_type="application/json")
+
+
+def checkout(request):
+    return render(request, 'stripe_main/checkout.html',
+                  context={'stripe_secret_api_key': settings.STRIPE_SECRET_API_KEY})
+
+
+def payment_submitted(request):
+    return render(request, 'stripe_main/payment_submitted.html')
 
 
 @csrf_exempt
@@ -162,25 +184,3 @@ def webhook(request):
 def items(request):
     context = {'items': models.Item.objects.all()}
     return render(request, 'stripe_main/items.html', context)
-
-
-def checkout(request):
-    return render(request, 'stripe_main/checkout.html')
-
-
-@csrf_exempt
-@require_POST
-def check_promocode(request):
-    try:
-        discount = models.Discount.objects.get(code=json.loads(request.body)['promocode'])
-        return HttpResponse(json.dumps({'result': 'promocode found', 'discount': [discount.code, discount.amount, discount.currency]}), content_type="application/json")
-    except ObjectDoesNotExist:
-        return HttpResponse(json.dumps({'result': 'promocode not found'}), content_type="application/json")
-        return HttpResponse('promocode not found')
-    except Exception:
-        print(traceback.format_exc())
-        return HttpResponse(json.dumps({'result': 'internal server error'}), status=500, content_type="application/json")
-
-
-def payment_submitted(request):
-    return render(request, 'stripe_main/payment_submitted.html')

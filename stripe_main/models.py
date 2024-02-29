@@ -42,7 +42,7 @@ class Order(models.Model):
 
 
 class Discount(models.Model):
-    code = models.CharField(max_length=255, primary_key=True)
+    code = models.CharField(max_length=255)
     amount = models.IntegerField()
     currency = models.CharField(choices=currency_choices)
 

@@ -1,118 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
+  <head>
     <meta charset="utf-8" />
     <title>Shop</title>
     <meta name="description" content="A demo of a payment on Stripe" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://js.stripe.com/v3/"></script>
-</head>
+  </head>
 
-<body>
+  <body>
     <div style="margin: 0 auto; display: flex; width: 700px; flex-direction: column; ">
-        {% for item in items %}
-        <div
-            style="width: 700px; margin: 0 auto 20px; background-color: rgba(10,10,100, .3); color: black; border-radius: 5px; padding: 5px;">
-            <div style="font-size: 20px;">
-                {{ item.name }}
-            </div>
-            <div style="margin: 20px 0px;">
-                {{ item.description }}
-            </div>
-            <div>
-                price: {{ item.price }} {{ item.currency }}
-            </div>
-            quantity: <input style="width: 33px;" type="number" id="quantity_{{ item.id }}" min="0">
+      {% for item in items %}
+      <div
+        style="width: 700px; margin: 0 auto 20px; background-color: rgba(10,10,100, .3); color: black; border-radius: 5px; padding: 5px;">
+        <div style="font-size: 20px;">
+          {{ item.name }}
         </div>
-        {% endfor %}
-
-        <div style="margin: 10px 0;">you can activate multiple promocodes, just check them one-by-one</div>
-        <div style="display: flex;">
-            <label style="margin-right: 3px" for="fname">promocode for a discount:</label>
-            <input style="margin: 0 2px;" type="text" id="promocode_input" name="fname">
-            <button style="margin: 0 3px;" id="button_check_promocode" style="padding: 3px;">check</button>
-            <div style="margin: 0 3px" id="check_promocode_status"></div>
-
+        <div style="margin: 20px 0px;">
+          {{ item.description }}
         </div>
-        <div>applied promocodes:</div>
-        <pre id="applied_promocodes"></pre>
-        <div style="margin: 5px 0;"> notice: a tax of 1USD(if it's a USD payment) or 50RUR(if it's a RUR payment) is
-            applied to each purchase </div>
-        <div style="margin: 5px 0;"> warning: in case you select items with different currency, you will be forwarded to
-            a row of payments with items grouped by currency</div>
+        <div>
+          price: {{ item.price }} {{ item.currency }}
+        </div>
+        quantity: <input style="width: 33px;" type="number" id="quantity_{{ item.id }}" min="0">
+      </div>
+      {% endfor %}
 
-        <button id="button_buy" style="margin-bottom:40px">BUY</button>
+      <div style="margin: 10px 0;">you can activate multiple promocodes, just check them one-by-one</div>
+      <div style="display: flex;">
+        <label style="margin-right: 3px" for="fname">promocode for a discount:</label>
+        <input style="margin: 0 2px;" type="text" id="promocode_input" name="fname">
+        <button style="margin: 0 3px;" id="button_check_promocode" style="padding: 3px;">check</button>
+        <div style="margin: 0 3px" id="check_promocode_status"></div>
+
+      </div>
+      <div>applied promocodes:</div>
+      <pre id="applied_promocodes"></pre>
+      <div style="margin: 5px 0;"> notice: a tax of 1USD(if it's a USD payment) or 33RUB(if it's a RUB payment) is
+        applied to each purchase </div>
+      <div style="margin: 5px 0;"> warning: in case you select items with different currency, you will be forwarded to
+        a row of payments with items grouped by currency</div>
+      <div id="text_empty_selection" class="hidden">no items selected!</div>
+      <button id="button_buy" style="margin-bottom:40px">BUY</button>
     </div>
-</body>
+  </body>
 
-<script>
-    const buy_button = document.getElementById("button_buy")
-    let data = { 'items': {}, 'discounts': [], 'taxes': [] }
-    let quantities = document.querySelectorAll('[id^="quantity_"]');
-    buy_button.addEventListener('click', function () {
-        for (const quantity of quantities) {
-            if (quantity.value > 0) {
-                item = quantity.id.replace("quantity_", "")
-                data['items'][item] = quantity.value
-            }
-        }
-      const data_params = new URLSearchParams({"data": JSON.stringify(data)});
-      console.log('--delim--')
-      console.log('' + data_params)
-        window.location.replace('/checkout/' + '?' + data_params)
-    })
+  <script>
+   const buy_button = document.getElementById("button_buy")
+   const text_empty_selection = document.getElementById("text_empty_selection")
+   let data = { 'items': {}, 'discounts': [], 'taxes': [] }
+   let quantities = document.querySelectorAll('[id^="quantity_"]');
+   buy_button.addEventListener('click', function () {
+     for (const quantity of quantities) {
+       if (quantity.value > 0) {
+         item = quantity.id.replace("quantity_", "")
+         data['items'][item] = quantity.value
+       }
+     }
+     if (JSON.stringify(data['items']) != JSON.stringify({})) {
+       const data_params = new URLSearchParams({"data": JSON.stringify(data)});
+       window.location.replace('/checkout/' + '?' + data_params)
+     } else {
+       text_empty_selection.classList.remove("hidden");
+   }})
 
-    async function check_promocode(code) {
-        const response = await fetch("/check_promocode/", {
-            method: "POST",
-            body: JSON.stringify({
-                'promocode': code
-            }),
+   async function check_promocode(code) {
+     const response = await fetch("/check_promocode/", {
+       method: "POST",
+       body: JSON.stringify({
+         'promocode': code
+       }),
 
-        })
-        return response.json()
-    }
+     })
+     return response.json()
+   }
 
-    const button_check_promocodes = document.getElementById("button_check_promocode")
-    const promocode_input = document.getElementById("promocode_input")
-    const check_promocode_status = document.getElementById("check_promocode_status")
-    const applied_promocodes = document.getElementById("applied_promocodes")
+   const button_check_promocodes = document.getElementById("button_check_promocode")
+   const promocode_input = document.getElementById("promocode_input")
+   const check_promocode_status = document.getElementById("check_promocode_status")
+   const applied_promocodes = document.getElementById("applied_promocodes")
 
-    button_check_promocode.addEventListener('click', function () {
-        let promocode = promocode_input.value
-        check_promocode(promocode).then(check_promocode_response => {
-            if (check_promocode_response['result'] == 'promocode found') {
-                if (!data['discounts'].find((element) => JSON.stringify(element) == JSON.stringify(check_promocode_response['discount'][0]))) {
-                    data['discounts'].push(check_promocode_response['discount'][0])
-                    check_promocode_status.innerHTML = "promocode found!"
-                    applied_promocodes.innerHTML = applied_promocodes.innerHTML + check_promocode_response['discount'][0] + ' ' + check_promocode_response['discount'][1] + check_promocode_response['discount'][2] + '<br>'
-                
-                } else {
-                 check_promocode_status.innerHTML = "promocode already applied"
-                }
-        } else {
+   button_check_promocode.addEventListener('click', function () {
+     let promocode = promocode_input.value
+     check_promocode(promocode).then(check_promocode_response => {
+       if (check_promocode_response['result'] == 'promocode found') {
+         if (!data['discounts'].find((element) => JSON.stringify(element) == JSON.stringify(check_promocode_response['discount'][0]))) {
+           data['discounts'].push(check_promocode_response['discount'][0])
+           check_promocode_status.innerHTML = "promocode found!"
+           applied_promocodes.innerHTML = applied_promocodes.innerHTML + check_promocode_response['discount'][0] + ' ' + check_promocode_response['discount'][1] + check_promocode_response['discount'][2] + '<br>'
+         } else {
+           check_promocode_status.innerHTML = "promocode already applied"
+         }
+       } else {
          check_promocode_status.innerHTML = "promocode not found"
-        }
-        })
-    })
+       }
+     })
+   })
 
 
 
-</script>
-<style>
-    button {
-        background: #5469d4;
-        font-family: Arial, sans-serif;
-        color: #ffffff;
-        border-radius: 4px;
-        border: 0;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
-    }
-</style>
+  </script>
+  <style>
+   button {
+     background: #5469d4;
+     font-family: Arial, sans-serif;
+     color: #ffffff;
+     border-radius: 4px;
+     border: 0;
+     font-size: 16px;
+     font-weight: 600;
+     cursor: pointer;
+     transition: all 0.2s ease;
+     box-shadow: 0px 4px 5.5px 0px rgba(0, 0, 0, 0.07);
+   }
+   .hidden {
+     display: none;
+   }
+
+  </style>
 
 </html>
