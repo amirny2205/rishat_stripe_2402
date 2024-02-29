@@ -1,5 +1,8 @@
 from django.db import models
 
+app_label, *_ = __name__.partition('.')
+
+
 currency_choices = {
     "usd": "usd",
     "rub": "rub"
@@ -15,6 +18,9 @@ class Item(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        db_table = app_label + '_items'
+
 
 class Order(models.Model):
     # stripe принимает оплату в integer и считается как сумма*100
@@ -22,24 +28,29 @@ class Order(models.Model):
     # оставляю такую же логику для админки
     amount = models.IntegerField()
     currency = models.CharField(choices=currency_choices)
-    discounts = models.ManyToManyField('Discount')
-    taxes = models.ManyToManyField('Tax')
+    discounts = models.ManyToManyField('Discount', blank=True)
+    taxes = models.ManyToManyField('Tax', blank=True)
     items = models.JSONField(blank=True)
     payment_intent = models.CharField(max_length=255)
     complete = models.BooleanField(default=False)
 
     def __str__(self):
-        completeness = "(incomplete)" if not self.complete else "(complete)"
-        return completeness + ' ' + str(self.amount/100) + self.currency
+        return f'({"in" if not self.complete else ""}complete) {self.amount/100}{self.currency}'
+
+    class Meta:
+        db_table = app_label + '_orders'
 
 
 class Discount(models.Model):
+    code = models.CharField(max_length=255, primary_key=True)
     amount = models.IntegerField()
     currency = models.CharField(choices=currency_choices)
-    code = models.CharField(max_length=255)
 
     def __str__(self):
         return str(self.code) + ' ' + str(self.amount) + self.currency
+
+    class Meta:
+        db_table = app_label + '_discounts'
 
 
 class Tax(models.Model):
@@ -52,3 +63,4 @@ class Tax(models.Model):
 
     class Meta:
         verbose_name_plural = "Taxes"
+        db_table = app_label + '_taxes'

@@ -2,6 +2,8 @@
 <html lang="en">
 
 <head>
+
+
     <meta charset="utf-8" />
     <title>Checkout</title>
     <meta name="description" content="A demo of a payment on Stripe" />
@@ -11,7 +13,7 @@
 
 <body>
     <div id="order_details" style="margin-top: 100px" class="form_copy">
-        <div> You are currently buying </div>
+        <div> You are currently buying:</div>
         <pre id="items_list"></pre>
         <div>The following discounts are applied:</div>
         <pre id="discounts_list"></pre>
@@ -37,36 +39,25 @@
     // !не забудь поменять при деплое
     // url на который возвращаться после всех платежей
     // должен быть в абсолютной форме "http://localhost:8000/items/"
-    let return_url = "http://localhost:8000/items/"
-    // этот урл тоже поменять, он нужен в случая ряда платежей из-за того, что у вещей разная валюта
-    let checkout_url = "http://localhost:8000/checkout/"
-
+    let return_url = "http://localhost:8000/payment_submitted/"
 
     const url_params = new URLSearchParams(window.location.search.substr(1))
-    let url_params_data = url_params.get('data')
+ let data = url_params.get('data')
 
-    let data
-
-    if (url_params_data) {
-        data = url_params_data
-    } else {
-        data = JSON.stringify({ "items": { '1': 2, '2': 1, '3': 4 }, "taxes": [], "discounts": ['ROBLOX', 'THECURE'] })
-        // data = JSON.stringify()
-    }
     // data = JSON.stringify({ "items": { '1': 2, '2': 1, '3': 4 }, "taxes": null, "discounts": ['ROBLOX', 'THECURE'] })
-    console.log(data)
 
     const stripe =
         Stripe("pk_test_51M5Ej5AOiYw02tQNODQIZcVlMHpQwLf8ThvFGt1vB96eAjXxR6jUzKC7ngioFL3SkTXjnmLhyhrSxk6xd2Sw6kHK00FH2Jo0Ew");
 
     let elements;
 
-    initialize(data);
-    checkStatus();
+ initialize(data)
 
+ 
     document
         .querySelector("#payment-form")
         .addEventListener("submit", handleSubmit);
+
 
     // Fetches a payment intent and captures the client secret
     async function initialize(data) {
@@ -76,9 +67,7 @@
             body: data,
         });
 
-        let { clientSecret, remaining_data, order_data } = await response.json();
-        console.log('--delim--')
-        console.log(order_data)
+        let { clientSecret, remaining_data, order_data, order_id } = await response.json();
 
         // здесь логика показа элементов заказа пользователю
         // он будет видеть, как складывается стоимость
@@ -95,21 +84,20 @@
         for (const discount of order_data['discounts']) {
             discounts_list.innerHTML = discounts_list.innerHTML + discount[0] + ' ' + discount[1] + order_data['currency'] + '<br>'
         }
-     for (const tax of order_data['taxes']){
+        for (const tax of order_data['taxes']) {
             taxes_list.innerHTML = taxes_list.innerHTML + tax[0] + order_data['currency'] + ' ' + tax[1] + '<br>'
-     }
-     let amount = '' + order_data['amount']  // convert to string
-     amount = amount.substr(0,amount.length-2) + '.' + amount.substr(amount.length-2)
-     total.innerHTML = amount + order_data['currency']
+        }
+        let amount = '' + order_data['amount']  // convert to string
+        amount = amount.substr(0, amount.length - 2) + '.' + amount.substr(amount.length - 2)
+        total.innerHTML = amount + order_data['currency']
 
 
-     if (remaining_data) {
+        if (remaining_data) {
             remaining_items_text.innerHTML = "there are items of different currency left to purchase, after completing this payment you will be forwarded to another one"
         }
 
-        if (remaining_data) {
-            return_url = checkout_url + '?data=' + remaining_data
-        }
+     if (remaining_data) {
+      return_url = return_url + '?data=' + remaining_data        }
 
         const appearance = {
             theme: 'stripe',
@@ -124,7 +112,8 @@
         paymentElement.mount("#payment-element");
     }
 
-    async function handleSubmit(e) {
+
+     async function handleSubmit(e) {
         e.preventDefault();
         setLoading(true);
 
@@ -134,7 +123,10 @@
                 // Make sure to change this to your payment completion page
                 return_url: return_url,
             },
+        }).then(function (result) {
+            // Inform the customer that there was an error.
         });
+
 
         // This point will only be reached if there is an immediate error when
         // confirming the payment. Otherwise, your customer will be redirected to
@@ -148,36 +140,6 @@
         }
 
         setLoading(false);
-    }
-
-    // Fetches the payment intent status after payment submission
-    async function checkStatus() {
-        const clientSecret = new URLSearchParams(window.lsocation.search).get(
-            "payment_intent_client_secret"
-        );
-
-        if (!clientSecret) {
-            return;
-        }
-
-        const { paymentIntent } = await stripe.retrievePaymentIntent(clientSecret);
-
-
-
-        switch (paymentIntent.status) {
-            case "succeeded":
-                showMessage("Payment succeeded!");
-                break;
-            case "processing":
-                showMessage("Your payment is processing.");
-                break;
-            case "requires_payment_method":
-                showMessage("Your payment was not successful, please try again.");
-                break;
-            default:
-                showMessage("Something went wrong.");
-                break;
-        }
     }
 
     // ------- UI helpers -------
