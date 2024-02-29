@@ -147,7 +147,8 @@ def checkout(request):
 
 
 def payment_submitted(request):
-    return render(request, 'stripe_main/payment_submitted.html')
+    return render(request, 'stripe_main/payment_submitted.html',
+                  context={'stripe_secret_api_key': settings.STRIPE_SECRET_API_KEY})
 
 
 @csrf_exempt

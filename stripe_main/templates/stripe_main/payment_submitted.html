@@ -27,7 +27,7 @@
    const redirect_url_start = '/items/'
    const redirect_url_continue = '/checkout/'
    const stripe =
-     Stripe("pk_test_51M5Ej5AOiYw02tQNODQIZcVlMHpQwLf8ThvFGt1vB96eAjXxR6jUzKC7ngioFL3SkTXjnmLhyhrSxk6xd2Sw6kHK00FH2Jo0Ew");
+     Stripe("{{ stripe_secret_api_key }}");
    checkStatus()
    async function checkStatus() {
      let clientSecret = new URLSearchParams(window.location.search).get(
@@ -42,17 +42,17 @@
 
      switch (paymentIntent.status) {
        case "succeeded":
-         showMessage("Payment succeeded!");
-         break;
+	 showMessage("Payment succeeded!");
+	 break;
        case "processing":
-         showMessage("Your payment is processing.");
-         break;
+	 showMessage("Your payment is processing.");
+	 break;
        case "requires_payment_method":
-         showMessage("Your payment was not successful, please try again.");
-         break;
+	 showMessage("Your payment was not successful, please try again.");
+	 break;
        default:
-         showMessage("Something went wrong.");
-         break;
+	 showMessage("Something went wrong.");
+	 break;
      }
    }
 
@@ -74,7 +74,7 @@
      window.location.replace(redirect_url_start)
    })
    button_continue_buying.addEventListener('click', function () {
-     const data_params = new URLSearchParams({"data": data});
+     const data_params = new URLSearchParams({ "data": data });
      window.location.replace('/checkout/' + '?' + data_params)
    })
 
