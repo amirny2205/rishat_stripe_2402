@@ -1,6 +1,9 @@
 from .base import *
 
-ALLOWED_HOSTS = ['backend', '192.168.2.172', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['backend', 'localhost', '127.0.0.1']
+[ALLOWED_HOSTS.append(host) for host in json.loads(os.getenv('ALLOWED_HOSTS'))]
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+
 
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env_docker_compose'))
 
