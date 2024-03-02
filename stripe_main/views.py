@@ -143,7 +143,8 @@ def check_promocode(request):
 
 def checkout(request):
     return render(request, 'stripe_main/checkout.html',
-                  context={'stripe_secret_api_key': settings.STRIPE_SECRET_API_KEY})
+                  context={'stripe_secret_api_key': settings.STRIPE_SECRET_API_KEY,
+                           'return_url': settings.CHECKOUT_RETURN_URL})
 
 
 def payment_submitted(request):

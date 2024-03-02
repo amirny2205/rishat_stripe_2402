@@ -37,7 +37,7 @@
    // !не забудь поменять при деплое
    // url на который возвращаться после всех платежей
    // должен быть в абсолютной форме "http://localhost:8000/items/"
-   let return_url = "http://localhost:8000/payment_submitted/"
+    let return_url = "{{ return_url }}"
 
    const url_params = new URLSearchParams(window.location.search.substr(1))
    let data = url_params.get('data')
