@@ -1,6 +1,6 @@
 from .base import *
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 [ALLOWED_HOSTS.append(host) for host in json.loads(os.getenv('ALLOWED_HOSTS'))]
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
