@@ -1,12 +1,7 @@
 FROM python:slim
-
+ENV DJANGO_SETTINGS_MODULE=config.settings.docker_dev
 WORKDIR /root/rishat_stripe/
-
 COPY ${REPO_DIR} $WORKDIR
-
 RUN pip3 install -r requirements.txt
-
-
 EXPOSE 8000
-
-CMD python manage.py migrate --settings=$SETTINGS_FILE; gunicorn --bind :8000 --workers 3 config.wsgi_docker_dev:application
+CMD python manage.py migrate --settings=$DJANGO_SETTINGS_MODULE; gunicorn --bind :8000 --workers 3 config.wsgi_docker_dev:application
