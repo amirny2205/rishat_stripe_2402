@@ -30,7 +30,7 @@
   Нам нужно слушать сообщения о статусе платежей:  
   `stripe listen --forward-to localhost:8000/webhook/ --api-key sk_test_`  
   Через докер может быть удобнее:  
-  `docker run --rm --network=host -it stripe/stripe-cli listen --forward-to localhost:8000/webhook/ --api-key sk_test_`
+  `docker run --rm --network=host -dit stripe/stripe-cli listen --forward-to localhost:8000/webhook/ --api-key sk_test_`
 
 ### Запуск сервиса без docker
 1. Создать `.env` файл: `cp ./.env_example .env`
@@ -50,7 +50,7 @@
 Запуск сервиса:
 1. cоздать `.env_docker_dev` файл: `cp ./.env_example .env_docker_dev`
    Заполнить его соответственно.  
-   `ALLOWED_HOSTS` добавляются к уже имеющемуся списку (`['localhost', '127.0.0.1']`)
+   `ALLOWED_HOSTS` автоматически добавляются к уже имеющемуся списку (`['localhost', '127.0.0.1']`)
 2. сбилдить образ: `docker build -f django.Dockerfile -t rishat_django .`
 3. запустить образ: `docker run -dit --env-file .env_docker_dev -e POSTGRES_DB=rishat_db -e POSTGRES_HOST=172.17.0.3 -e POSTGRES_PORT=5432 -e CHECKOUT_RETURN_URL=http://localhost:8000/payment_submitted/ -p 8000:8000 rishat_django`  
   `POSTGRES_HOST` здесь ведёт к докеру с postgres, его ip можно получить командой `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-postgres`  
@@ -59,5 +59,12 @@
 Теперь на `localhost:8000/items/` браузер должен показывать страницу с выбором вещей.
 
 Сервис по умолчанию запускает gunicorn, тот не сервирует статику, и, чтобы не развалилось то, что от неё зависит, например админская панель, необходимо после запуска докера(он делает `collectstatic`) скопировать статику в соответствующее место, откуда она будет сервироваться(напр. через nginx). Для этого можно использовать `docker cp ...`, папка со статикой должна сервироваться по адресу _static/_ или, в случае с docker-compose, можно посмотреть как это сделано у меня: https://github.com/amirny2205/rishat_stripe_2402_compose  
-можно использовать сервис nginx, созданный в процессе решения этой задачи(посмотрите конфиг, там указана папка, куда копировать статику): https://github.com/amirny2205/rishat_stripe_2402_nginx
 
+### Сервис nginx
+можно использовать сервис nginx, созданный в процессе решения этой задачи: https://github.com/amirny2205/rishat_stripe_2402_nginx
+
+команда копирования статики выглядит так: 
+```
+docker cp 2d46:/root/rishat_stripe/static .
+docker cp ./static/* 2122:/home/nginx_user/rishat_nginx/django_static/
+```
