@@ -33,8 +33,10 @@
   `docker run --rm --network=host -dit stripe/stripe-cli listen --forward-to localhost:8000/webhook/ --api-key sk_test_`
 
 ### Запуск сервиса без docker
-1. Создать `.env` файл: `cp ./.env_example .env`
-   Заполнить его соответственно. Ключи страйп получать на их сайте, в своем дешборде.
+1. Создать `.env` файл: `cp ./.env_example .env`  
+   Заполнить его соответственно. Ключи страйп получать на их сайте, в своем дешборде.   
+   `ALLOWED_HOSTS` автоматически добавляются к уже имеющемуся списку (`['localhost', '127.0.0.1']`)  
+   В `config/settings/base.py` при необходимости заменить переменную `CHECKOUT_RETURN_URL` - это абсолютный путь к странице с _payment_submit/_, его использует скрипт stripe на странице _checkout/_ . Заменить, когда ваш итоговый хостнейм будет отличаться.  
 2. создаём виртуальную среду: `python3 -m venv venv`
 3. активируем её, на линуксе это: `source ./venv/bin/activate`
 4. устанавливаем зависимости: `pip install -r requirements.txt`
