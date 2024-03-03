@@ -2,6 +2,8 @@ from .base import *
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 [ALLOWED_HOSTS.append(host) for host in json.loads(os.getenv('ALLOWED_HOSTS'))]
+[CSRF_TRUSTED_ORIGINS.append('http://' + origin) for origin in ALLOWED_HOSTS]
+[CSRF_TRUSTED_ORIGINS.append('https://' + origin) for origin in ALLOWED_HOSTS]
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 environ.Env.read_env(env_file=os.path.join(BASE_DIR, '.env_docker_dev'))

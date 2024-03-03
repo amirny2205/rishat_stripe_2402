@@ -2,6 +2,8 @@ from .base import *
 
 ALLOWED_HOSTS = ['backend', 'localhost', '127.0.0.1']
 [ALLOWED_HOSTS.append(host) for host in json.loads(os.getenv('ALLOWED_HOSTS'))]
+[CSRF_TRUSTED_ORIGINS.append('http://' + origin) for origin in ALLOWED_HOSTS]
+[CSRF_TRUSTED_ORIGINS.append('https://' + origin) for origin in ALLOWED_HOSTS]
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 

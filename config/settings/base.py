@@ -37,7 +37,9 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = []
 [ALLOWED_HOSTS.append(host) for host in json.loads(os.getenv('ALLOWED_HOSTS'))]
-
+CSRF_TRUSTED_ORIGINS = []
+[CSRF_TRUSTED_ORIGINS.append('http://' + origin) for origin in ALLOWED_HOSTS]
+[CSRF_TRUSTED_ORIGINS.append('https://' + origin) for origin in ALLOWED_HOSTS]
 
 STRIPE_API_KEY = env("STRIPE_API_KEY")
 STRIPE_SECRET_API_KEY = env("STRIPE_SECRET_API_KEY")
